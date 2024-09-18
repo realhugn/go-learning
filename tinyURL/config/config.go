@@ -9,6 +9,7 @@ import (
 type Config struct {
 	DatabaseURL string
 	ServerPort  string
+	RedisURL    string
 }
 
 func Load() (*Config, error) {
@@ -26,5 +27,6 @@ func Load() (*Config, error) {
 	return &Config{
 		DatabaseURL: viper.GetString("DATABASE_URL"),
 		ServerPort:  viper.GetString("SERVER_PORT"),
+		RedisURL:    viper.GetString("REDIS_URL"),
 	}, nil
 }

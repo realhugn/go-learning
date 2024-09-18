@@ -2,6 +2,8 @@ package service
 
 import (
 	"errors"
+	"time"
+	"tinyURL/database"
 	"tinyURL/internal/models"
 	"tinyURL/internal/repository"
 	"tinyURL/pkg/shortener"
@@ -20,14 +22,16 @@ type urlService struct {
 	shortener    shortener.Shortener
 	validator    validator.Validate
 	id_generator uidgenerator.IDGenerator
+	cache        database.RedisCache
 }
 
-func NewURLService(repo repository.URLRepository) URLService {
+func NewURLService(repo repository.URLRepository, cache *database.RedisCache) URLService {
 	return &urlService{
 		repo:         repo,
 		shortener:    *shortener.New(),
 		validator:    *validator.New(),
 		id_generator: *uidgenerator.NewIDGenerator(1),
+		cache:        *cache,
 	}
 }
 
@@ -67,10 +71,18 @@ func (s *urlService) Original(shortURL string) (string, error) {
 	if err := s.validator.Var(shortURL, "required,min=6,max=10"); err != nil {
 		return "", errors.New("invalid short URL format")
 	}
+
+	longURL, err := s.cache.Get(shortURL)
+	if err == nil {
+		return longURL, nil
+	}
+
 	url, err := s.repo.FindByShortURL(shortURL)
 	if err != nil {
 		return "", err
 	}
+
+	s.cache.Set(shortURL, url.Original, time.Hour*48)
 
 	return url.Original, nil
 }

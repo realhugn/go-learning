@@ -23,8 +23,13 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
+	cache, err := database.NewRedisCache(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize redis cache: %v", err)
+	}
+
 	urlRepo := repository.NewURLRepository(db)
-	urlService := service.NewURLService(urlRepo)
+	urlService := service.NewURLService(urlRepo, cache)
 	urlHandler := handlers.NewURLHandler(urlService)
 
 	router := gin.Default()
