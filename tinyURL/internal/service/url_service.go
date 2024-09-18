@@ -28,11 +28,7 @@ func (s *URLService) Shorten(originalURL string) (string, error) {
 		return "", errors.New("invalid URL format")
 	}
 
-	shortURL, err := s.repo.FindByOriginalURL(originalURL)
-
-	if err != nil {
-		return "", err
-	}
+	shortURL, _ := s.repo.FindByOriginalURL(originalURL)
 
 	if shortURL != nil {
 		return shortURL.ShortURL, nil
