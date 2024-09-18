@@ -31,5 +31,8 @@ func main() {
 	api.SetupRoutes(router, urlHandler)
 
 	log.Printf("Server running on :%s", cfg.ServerPort)
-	router.Run(":" + cfg.ServerPort)
+	err = router.Run(":" + cfg.ServerPort)
+	if err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }

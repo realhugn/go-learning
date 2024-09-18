@@ -13,6 +13,9 @@ func Init(cfg *config.Config) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.AutoMigrate(&models.URL{})
+	err = db.AutoMigrate(&models.URL{})
+	if err != nil {
+		return nil, err
+	}
 	return db, nil
 }

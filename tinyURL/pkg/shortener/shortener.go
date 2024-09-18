@@ -13,6 +13,9 @@ func New() *Shortener {
 
 func (s *Shortener) Generate() string {
 	b := make([]byte, 8)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
 	return base64.URLEncoding.EncodeToString(b)[:8]
 }
