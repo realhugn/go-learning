@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type URL struct {
 	gorm.Model
+	Id       int64  `gorm:"primaryKey"`
 	ShortURL string `gorm:"uniqueIndex"`
 	Original string
 }

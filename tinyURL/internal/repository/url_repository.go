@@ -33,6 +33,9 @@ func (r postgresURLRepository) FindByOriginalURL(originalURL string) (*models.UR
 	var url models.URL
 	err := r.db.Where("original = ?", originalURL).First(&url).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &url, nil

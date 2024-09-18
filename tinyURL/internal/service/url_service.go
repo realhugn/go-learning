@@ -5,6 +5,7 @@ import (
 	"tinyURL/internal/models"
 	"tinyURL/internal/repository"
 	"tinyURL/pkg/shortener"
+	"tinyURL/pkg/uidgenerator"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -15,20 +16,22 @@ type URLService interface {
 }
 
 type urlService struct {
-	repo      repository.URLRepository
-	shortener shortener.Shortener
-	validator validator.Validate
+	repo         repository.URLRepository
+	shortener    shortener.Shortener
+	validator    validator.Validate
+	id_generator uidgenerator.IDGenerator
 }
 
 func NewURLService(repo repository.URLRepository) URLService {
 	return &urlService{
-		repo:      repo,
-		shortener: *shortener.New(),
-		validator: *validator.New(),
+		repo:         repo,
+		shortener:    *shortener.New(),
+		validator:    *validator.New(),
+		id_generator: *uidgenerator.NewIDGenerator(1),
 	}
 }
 
-func (s urlService) Shorten(originalURL string) (string, error) {
+func (s *urlService) Shorten(originalURL string) (string, error) {
 	if err := s.validator.Var(originalURL, "required,url"); err != nil {
 		return "", errors.New("invalid URL format")
 	}
@@ -39,12 +42,12 @@ func (s urlService) Shorten(originalURL string) (string, error) {
 		return shortURL.ShortURL, nil
 	}
 
-	generatedURL := s.shortener.Generate()
-	for s.repo.KeyExists(generatedURL) {
-		generatedURL = s.shortener.Generate()
-	}
+	// This ensure the uniqueness of the generated ID
+	uid := s.id_generator.GenerateID()
+	generatedURL := s.shortener.ToBase62(int(uid))
 
 	url := &models.URL{
+		Id:       uid,
 		ShortURL: generatedURL,
 		Original: originalURL,
 	}
@@ -60,7 +63,7 @@ func (s urlService) Shorten(originalURL string) (string, error) {
 	return generatedURL, nil
 }
 
-func (s urlService) Original(shortURL string) (string, error) {
+func (s *urlService) Original(shortURL string) (string, error) {
 	if err := s.validator.Var(shortURL, "required,min=6,max=10"); err != nil {
 		return "", errors.New("invalid short URL format")
 	}
