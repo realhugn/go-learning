@@ -9,21 +9,26 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type URLService struct {
-	repo      *repository.URLRepository
-	shortener *shortener.Shortener
-	validator *validator.Validate
+type URLService interface {
+	Shorten(originalURL string) (string, error)
+	Original(shortURL string) (string, error)
 }
 
-func NewURLService(repo *repository.URLRepository) *URLService {
-	return &URLService{
+type urlService struct {
+	repo      repository.URLRepository
+	shortener shortener.Shortener
+	validator validator.Validate
+}
+
+func NewURLService(repo repository.URLRepository) URLService {
+	return &urlService{
 		repo:      repo,
-		shortener: shortener.New(),
-		validator: validator.New(),
+		shortener: *shortener.New(),
+		validator: *validator.New(),
 	}
 }
 
-func (s *URLService) Shorten(originalURL string) (string, error) {
+func (s urlService) Shorten(originalURL string) (string, error) {
 	if err := s.validator.Var(originalURL, "required,url"); err != nil {
 		return "", errors.New("invalid URL format")
 	}
@@ -35,6 +40,9 @@ func (s *URLService) Shorten(originalURL string) (string, error) {
 	}
 
 	generatedURL := s.shortener.Generate()
+	for s.repo.KeyExists(generatedURL) {
+		generatedURL = s.shortener.Generate()
+	}
 
 	url := &models.URL{
 		ShortURL: generatedURL,
@@ -52,7 +60,7 @@ func (s *URLService) Shorten(originalURL string) (string, error) {
 	return generatedURL, nil
 }
 
-func (s *URLService) Original(shortURL string) (string, error) {
+func (s urlService) Original(shortURL string) (string, error) {
 	if err := s.validator.Var(shortURL, "required,min=6,max=10"); err != nil {
 		return "", errors.New("invalid short URL format")
 	}

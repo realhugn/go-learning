@@ -8,15 +8,20 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type URLHandler struct {
-	urlService *service.URLService
-	validator  *validator.Validate
+type URLHandler interface {
+	Shorten(c *gin.Context)
+	Original(c *gin.Context)
 }
 
-func NewURLHandler(urlService *service.URLService) *URLHandler {
-	return &URLHandler{
+type urlHandler struct {
+	urlService service.URLService
+	validator  validator.Validate
+}
+
+func NewURLHandler(urlService service.URLService) URLHandler {
+	return &urlHandler{
 		urlService: urlService,
-		validator:  validator.New(),
+		validator:  *validator.New(),
 	}
 }
 
@@ -24,7 +29,7 @@ type ShortenRequest struct {
 	LongURL string `json:"long_url" validate:"required,url"`
 }
 
-func (h *URLHandler) Shorten(c *gin.Context) {
+func (h urlHandler) Shorten(c *gin.Context) {
 	var input ShortenRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -46,7 +51,7 @@ func (h *URLHandler) Shorten(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"short_url": "http://localhost:8082/" + shortURL})
 }
 
-func (h *URLHandler) Original(c *gin.Context) {
+func (h urlHandler) Original(c *gin.Context) {
 	shortURL := c.Param("short_url")
 
 	if err := h.validator.Var(shortURL, "required,min=6,max=10"); err != nil {
