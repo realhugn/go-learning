@@ -41,7 +41,7 @@ jobs:
 
     - name: Run integration tests
       working-directory: ./tinyURL
-      run: go test ./test/ -v
+      run: go test ./tests/ -v
 
   lint:
     name: Lint
