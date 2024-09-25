@@ -82,7 +82,10 @@ func (s *urlService) Original(shortURL string) (string, error) {
 		return "", err
 	}
 
-	s.cache.Set(shortURL, url.Original, time.Hour*48)
+	err = s.cache.Set(shortURL, url.Original, time.Hour*48)
+	if err != nil {
+		return "", err
+	}
 
 	return url.Original, nil
 }
