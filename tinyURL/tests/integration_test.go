@@ -29,9 +29,10 @@ func TestTinyURLIntegration(t *testing.T) {
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
+	redisClient, _ := database.NewRedisCache(cfg)
 
 	urlRepo := repository.NewURLRepository(db)
-	urlService := service.NewURLService(urlRepo)
+	urlService := service.NewURLService(urlRepo, redisClient)
 	urlHandler := handlers.NewURLHandler(urlService)
 
 	router := gin.Default()
