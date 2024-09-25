@@ -25,14 +25,17 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+      working-directory: ./uuid-generator
 
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3
       with:
         version: latest
+        working-directory: ./tinyURL
 
     - name: Run benchmarks
       run: go test -bench=. -benchmem ./...
+      working-directory: ./uuid-generator
 
     - name: Check formatting
       run: |
@@ -41,3 +44,4 @@ jobs:
           gofmt -s -l .
           exit 1
         fi
+      working-directory: ./uuid-generator
